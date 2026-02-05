@@ -1,0 +1,300 @@
+"import { useEffect, useMemo, useRef, useCallback } from \"react\";
+import { MapContainer, TileLayer, CircleMarker, Popup, useMap, useMapEvents } from \"react-leaflet\";
+import MarkerClusterGroup from \"react-leaflet-cluster\";
+import { Flame, MapPin, Satellite, Clock, Thermometer, Activity } from \"lucide-react\";
+import \"leaflet/dist/leaflet.css\";
+
+// Fix Leaflet default icon issue
+import L from \"leaflet\";
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: \"https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png\",
+  iconUrl: \"https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png\",
+  shadowUrl: \"https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png\",
+});
+
+// Get marker color based on confidence
+const getMarkerColor = (confidence) => {
+  if (confidence >= 80) return \"#ff4444\";
+  if (confidence >= 50) return \"#ff8c00\";
+  return \"#ffd700\";
+};
+
+// Get marker size based on confidence
+const getMarkerRadius = (confidence) => {
+  if (confidence >= 80) return 8;
+  if (confidence >= 50) return 6;
+  return 4;
+};
+
+// Get confidence label
+const getConfidenceLabel = (confidence) => {
+  if (confidence >= 80) return \"High\";
+  if (confidence >= 50) return \"Medium\";
+  return \"Low\";
+};
+
+// Map controller for programmatic control
+function MapController({ searchLocation, onClearSearch }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (searchLocation) {
+      map.flyTo([searchLocation.lat, searchLocation.lng], 10, {
+        duration: 1.5,
+      });
+    }
+  }, [searchLocation, map]);
+  
+  return null;
+}
+
+// Heatmap simulation with larger blurred markers
+function HeatmapLayer({ fires }) {
+  return (
+    <>
+      {fires.map((fire, index) => (
+        <CircleMarker
+          key={`heat-${fire.id || index}`}
+          center={[fire.latitude, fire.longitude]}
+          radius={20 + (fire.confidence / 100) * 20}
+          pathOptions={{
+            color: \"transparent\",
+            fillColor: getMarkerColor(fire.confidence),
+            fillOpacity: 0.15,
+          }}
+        />
+      ))}
+    </>
+  );
+}
+
+// Fire marker component
+function FireMarker({ fire, onSelect }) {
+  const color = getMarkerColor(fire.confidence);
+  const radius = getMarkerRadius(fire.confidence);
+  
+  return (
+    <CircleMarker
+      center={[fire.latitude, fire.longitude]}
+      radius={radius}
+      pathOptions={{
+        color: color,
+        fillColor: color,
+        fillOpacity: 0.8,
+        weight: 2,
+      }}
+      eventHandlers={{
+        click: () => onSelect(fire),
+      }}
+      data-testid={`fire-marker-${fire.id}`}
+    >
+      <Popup className=\"fire-popup\" maxWidth={300}>
+        <div className=\"p-2 min-w-[250px]\">
+          {/* Header */}
+          <div className=\"flex items-center gap-2 mb-3 pb-2 border-b border-white/10\">
+            <Flame 
+              className={fire.confidence >= 80 ? \"text-fire-high animate-pulse\" : \"text-fire-med\"} 
+              size={20} 
+            />
+            <div>
+              <div className=\"text-sm font-bold text-white\">
+                Fire Detection
+              </div>
+              <div 
+                className={`text-xs font-mono ${
+                  fire.confidence >= 80 ? \"text-fire-high\" : 
+                  fire.confidence >= 50 ? \"text-fire-med\" : \"text-fire-low\"
+                }`}
+              >
+                {getConfidenceLabel(fire.confidence)} Confidence
+              </div>
+            </div>
+          </div>
+          
+          {/* Details */}
+          <div className=\"space-y-2 text-sm\">
+            <div className=\"flex items-center gap-2\">
+              <MapPin size={14} className=\"text-tech-cyan\" />
+              <span className=\"text-slate-300\">
+                {fire.latitude.toFixed(4)}, {fire.longitude.toFixed(4)}
+              </span>
+            </div>
+            
+            <div className=\"flex items-center gap-2\">
+              <Activity size={14} className=\"text-tech-cyan\" />
+              <span className=\"text-slate-300\">
+                Confidence: <span className=\"font-mono text-white\">{fire.confidence.toFixed(1)}%</span>
+              </span>
+            </div>
+            
+            <div className=\"flex items-center gap-2\">
+              <Thermometer size={14} className=\"text-tech-cyan\" />
+              <span className=\"text-slate-300\">
+                Brightness: <span className=\"font-mono text-white\">{fire.brightness?.toFixed(1) || \"N/A\"} K</span>
+              </span>
+            </div>
+            
+            <div className=\"flex items-center gap-2\">
+              <Satellite size={14} className=\"text-tech-cyan\" />
+              <span className=\"text-slate-300\">
+                Satellite: <span className=\"font-mono text-white\">{fire.satellite || \"VIIRS\"}</span>
+              </span>
+            </div>
+            
+            <div className=\"flex items-center gap-2\">
+              <Clock size={14} className=\"text-tech-cyan\" />
+              <span className=\"text-slate-300\">
+                {fire.acq_date} {fire.acq_time?.padStart(4, \"0\").replace(/(\d{2})(\d{2})/, \"$1:$2\")}
+              </span>
+            </div>
+            
+            {fire.frp && (
+              <div className=\"flex items-center gap-2\">
+                <Flame size={14} className=\"text-fire-high\" />
+                <span className=\"text-slate-300\">
+                  FRP: <span className=\"font-mono text-white\">{fire.frp.toFixed(1)} MW</span>
+                </span>
+              </div>
+            )}
+          </div>
+          
+          {/* Day/Night indicator */}
+          {fire.daynight && (
+            <div className=\"mt-3 pt-2 border-t border-white/10\">
+              <span className={`text-xs font-mono px-2 py-1 rounded ${
+                fire.daynight === \"D\" ? \"bg-yellow-500/20 text-yellow-400\" : \"bg-blue-500/20 text-blue-400\"
+              }`}>
+                {fire.daynight === \"D\" ? \"☀ DAY\" : \"🌙 NIGHT\"}
+              </span>
+            </div>
+          )}
+        </div>
+      </Popup>
+    </CircleMarker>
+  );
+}
+
+// Cluster icon creator
+const createClusterCustomIcon = (cluster) => {
+  const count = cluster.getChildCount();
+  let size = \"small\";
+  let bgColor = \"#ffd700\";
+  
+  if (count > 100) {
+    size = \"large\";
+    bgColor = \"#ff4444\";
+  } else if (count > 20) {
+    size = \"medium\";
+    bgColor = \"#ff8c00\";
+  }
+  
+  return L.divIcon({
+    html: `<div style=\"
+      background: ${bgColor};
+      color: #1a1a2e;
+      width: ${size === \"large\" ? 50 : size === \"medium\" ? 40 : 30}px;
+      height: ${size === \"large\" ? 50 : size === \"medium\" ? 40 : 30}px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: bold;
+      font-size: ${size === \"large\" ? 14 : size === \"medium\" ? 12 : 10}px;
+      box-shadow: 0 0 15px ${bgColor}80;
+      border: 2px solid rgba(26, 26, 46, 0.8);
+    \">${count}</div>`,
+    className: `marker-cluster-${size}`,
+    iconSize: L.point(size === \"large\" ? 50 : size === \"medium\" ? 40 : 30, size === \"large\" ? 50 : size === \"medium\" ? 40 : 30),
+  });
+};
+
+export default function FireMap({ 
+  fires, 
+  showHeatmap, 
+  selectedFire, 
+  onSelectFire,
+  searchLocation,
+  onClearSearch
+}) {
+  const mapRef = useRef(null);
+  
+  // Memoize markers to prevent unnecessary re-renders
+  const markers = useMemo(() => {
+    if (!fires || fires.length === 0) return null;
+    
+    return fires.map((fire, index) => (
+      <FireMarker 
+        key={fire.id || `fire-${index}`} 
+        fire={fire} 
+        onSelect={onSelectFire}
+      />
+    ));
+  }, [fires, onSelectFire]);
+
+  return (
+    <MapContainer
+      center={[39.8283, -98.5795]} // Center of USA
+      zoom={4}
+      style={{ height: \"100%\", width: \"100%\" }}
+      zoomControl={true}
+      ref={mapRef}
+      data-testid=\"fire-map\"
+    >
+      {/* Dark map tiles */}
+      <TileLayer
+        attribution='&copy; <a href=\"https://carto.com/\">CARTO</a>'
+        url=\"https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png\"
+      />
+      
+      {/* Map controller for search */}
+      <MapController 
+        searchLocation={searchLocation} 
+        onClearSearch={onClearSearch}
+      />
+      
+      {/* Heatmap layer (optional) */}
+      {showHeatmap && fires && <HeatmapLayer fires={fires} />}
+      
+      {/* Clustered fire markers */}
+      {!showHeatmap && markers && (
+        <MarkerClusterGroup
+          chunkedLoading
+          maxClusterRadius={60}
+          spiderfyOnMaxZoom={true}
+          showCoverageOnHover={false}
+          iconCreateFunction={createClusterCustomIcon}
+        >
+          {markers}
+        </MarkerClusterGroup>
+      )}
+      
+      {/* Search location marker */}
+      {searchLocation && (
+        <CircleMarker
+          center={[searchLocation.lat, searchLocation.lng]}
+          radius={15}
+          pathOptions={{
+            color: \"#00ffff\",
+            fillColor: \"#00ffff\",
+            fillOpacity: 0.3,
+            weight: 3,
+            dashArray: \"5, 5\",
+          }}
+        >
+          <Popup>
+            <div className=\"p-2\">
+              <div className=\"flex items-center gap-2 mb-2\">
+                <MapPin className=\"text-tech-cyan\" size={16} />
+                <span className=\"font-bold text-white\">Search Location</span>
+              </div>
+              <p className=\"text-sm text-slate-300\">{searchLocation.name}</p>
+            </div>
+          </Popup>
+        </CircleMarker>
+      )}
+    </MapContainer>
+  );
+}
+"

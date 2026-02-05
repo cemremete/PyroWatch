@@ -1,0 +1,267 @@
+"import { useState } from \"react\";
+import { 
+  Flame, 
+  Search, 
+  Filter, 
+  Layers, 
+  Activity, 
+  ChevronLeft, 
+  ChevronRight,
+  RefreshCw,
+  MapPin,
+  Thermometer,
+  AlertTriangle,
+  Clock
+} from \"lucide-react\";
+import { Button } from \"@/components/ui/button\";
+import { Input } from \"@/components/ui/input\";
+import { Slider } from \"@/components/ui/slider\";
+import { Switch } from \"@/components/ui/switch\";
+import { Label } from \"@/components/ui/label\";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from \"@/components/ui/select\";
+
+export default function Sidebar({
+  collapsed,
+  onToggle,
+  stats,
+  filters,
+  onFiltersChange,
+  onSearch,
+  onFetchData,
+  fireCount,
+}) {
+  const [searchQuery, setSearchQuery] = useState(\"\");
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    onSearch(searchQuery);
+  };
+
+  if (collapsed) {
+    return (
+      <div className=\"sidebar sidebar-collapsed\" data-testid=\"sidebar-collapsed\">
+        <button
+          onClick={onToggle}
+          className=\"p-4 text-tech-cyan hover:bg-navy-700 w-full flex justify-center\"
+          data-testid=\"sidebar-expand-btn\"
+        >
+          <ChevronRight size={20} />
+        </button>
+        <div className=\"flex flex-col items-center gap-4 py-4\">
+          <Flame className=\"text-fire-high\" size={24} />
+          <Activity className=\"text-tech-cyan\" size={20} />
+          <Filter className=\"text-slate-400\" size={20} />
+          <Layers className=\"text-slate-400\" size={20} />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className=\"sidebar\" data-testid=\"sidebar\">
+      {/* Header */}
+      <div className=\"p-4 border-b border-white/10 flex items-center justify-between\">
+        <div className=\"flex items-center gap-3\">
+          <div className=\"relative\">
+            <Flame className=\"text-fire-high animate-pulse\" size={28} />
+            <div className=\"absolute -top-1 -right-1 w-3 h-3 bg-fire-high rounded-full animate-ping\" />
+          </div>
+          <div>
+            <h1 className=\"font-headings text-xl font-bold tracking-tight text-white uppercase\">
+              PyroWatch
+            </h1>
+            <p className=\"text-xs text-slate-500 font-mono tracking-wider\">
+              WILDFIRE MONITORING
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={onToggle}
+          className=\"p-2 text-slate-400 hover:text-tech-cyan hover:bg-navy-700 rounded\"
+          data-testid=\"sidebar-collapse-btn\"
+        >
+          <ChevronLeft size={18} />
+        </button>
+      </div>
+
+      {/* Stats Section */}
+      <div className=\"p-4 border-b border-white/10\">
+        <div className=\"flex items-center gap-2 mb-3\">
+          <Activity className=\"text-tech-cyan\" size={16} />
+          <span className=\"text-xs font-mono text-slate-400 uppercase tracking-wider\">
+            Live Statistics
+          </span>
+        </div>
+        
+        <div className=\"grid grid-cols-2 gap-3\">
+          <div className=\"stats-card\" data-testid=\"stats-total\">
+            <div className=\"stats-value\">{stats?.total_fires?.toLocaleString() || 0}</div>
+            <div className=\"stats-label\">Total Fires</div>
+          </div>
+          <div className=\"stats-card\" data-testid=\"stats-active\">
+            <div className=\"stats-value text-fire-high\">{stats?.active_fires_24h?.toLocaleString() || 0}</div>
+            <div className=\"stats-label\">Active 24h</div>
+          </div>
+          <div className=\"stats-card\" data-testid=\"stats-high\">
+            <div className=\"stats-value text-fire-high\">{stats?.high_confidence?.toLocaleString() || 0}</div>
+            <div className=\"stats-label\">High Conf</div>
+          </div>
+          <div className=\"stats-card\" data-testid=\"stats-display\">
+            <div className=\"stats-value text-tech-cyan\">{fireCount?.toLocaleString() || 0}</div>
+            <div className=\"stats-label\">Displayed</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Search */}
+      <div className=\"p-4 border-b border-white/10\">
+        <form onSubmit={handleSearchSubmit} className=\"flex gap-2\">
+          <div className=\"relative flex-1\">
+            <Search className=\"absolute left-3 top-1/2 -translate-y-1/2 text-slate-500\" size={16} />
+            <Input
+              type=\"text\"
+              placeholder=\"Search location...\"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className=\"pl-10 bg-navy-800 border-white/10 text-white placeholder:text-slate-500 focus:border-tech-cyan\"
+              data-testid=\"search-input\"
+            />
+          </div>
+          <Button
+            type=\"submit\"
+            variant=\"outline\"
+            size=\"icon\"
+            className=\"border-tech-cyan text-tech-cyan hover:bg-tech-cyan/10\"
+            data-testid=\"search-btn\"
+          >
+            <MapPin size={16} />
+          </Button>
+        </form>
+      </div>
+
+      {/* Filters */}
+      <div className=\"p-4 border-b border-white/10 flex-1 overflow-y-auto\">
+        <div className=\"flex items-center gap-2 mb-4\">
+          <Filter className=\"text-tech-cyan\" size={16} />
+          <span className=\"text-xs font-mono text-slate-400 uppercase tracking-wider\">
+            Filters
+          </span>
+        </div>
+
+        {/* Time Range */}
+        <div className=\"mb-6\">
+          <Label className=\"text-xs text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2\">
+            <Clock size={14} />
+            Time Range
+          </Label>
+          <Select
+            value={String(filters.hours)}
+            onValueChange={(value) => onFiltersChange({ ...filters, hours: parseInt(value) })}
+          >
+            <SelectTrigger 
+              className=\"bg-navy-800 border-white/10 text-white\"
+              data-testid=\"time-range-select\"
+            >
+              <SelectValue placeholder=\"Select time range\" />
+            </SelectTrigger>
+            <SelectContent className=\"bg-navy-800 border-white/10\">
+              <SelectItem value=\"6\">Last 6 hours</SelectItem>
+              <SelectItem value=\"12\">Last 12 hours</SelectItem>
+              <SelectItem value=\"24\">Last 24 hours</SelectItem>
+              <SelectItem value=\"48\">Last 48 hours</SelectItem>
+              <SelectItem value=\"72\">Last 3 days</SelectItem>
+              <SelectItem value=\"168\">Last 7 days</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Confidence Filter */}
+        <div className=\"mb-6\">
+          <Label className=\"text-xs text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2\">
+            <Thermometer size={14} />
+            Min Confidence: {filters.minConfidence}%
+          </Label>
+          <Slider
+            value={[filters.minConfidence]}
+            onValueChange={([value]) => onFiltersChange({ ...filters, minConfidence: value })}
+            min={0}
+            max={100}
+            step={10}
+            className=\"w-full\"
+            data-testid=\"confidence-slider\"
+          />
+          <div className=\"flex justify-between text-xs text-slate-500 mt-1\">
+            <span>0%</span>
+            <span>50%</span>
+            <span>100%</span>
+          </div>
+        </div>
+
+        {/* Heatmap Toggle */}
+        <div className=\"mb-6\">
+          <div className=\"flex items-center justify-between\">
+            <Label className=\"text-xs text-slate-400 uppercase tracking-wider flex items-center gap-2\">
+              <Layers size={14} />
+              Heatmap View
+            </Label>
+            <Switch
+              checked={filters.showHeatmap}
+              onCheckedChange={(checked) => onFiltersChange({ ...filters, showHeatmap: checked })}
+              data-testid=\"heatmap-toggle\"
+            />
+          </div>
+        </div>
+
+        {/* Legend */}
+        <div className=\"mt-6 p-3 bg-navy-800/50 rounded-lg\">
+          <div className=\"text-xs text-slate-400 uppercase tracking-wider mb-3\">
+            Confidence Legend
+          </div>
+          <div className=\"space-y-2\">
+            <div className=\"legend-item\">
+              <div className=\"legend-dot legend-dot-high\"></div>
+              <span className=\"text-sm text-slate-300\">High (&gt;80%)</span>
+            </div>
+            <div className=\"legend-item\">
+              <div className=\"legend-dot legend-dot-med\"></div>
+              <span className=\"text-sm text-slate-300\">Medium (50-80%)</span>
+            </div>
+            <div className=\"legend-item\">
+              <div className=\"legend-dot legend-dot-low\"></div>
+              <span className=\"text-sm text-slate-300\">Low (&lt;50%)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer Actions */}
+      <div className=\"p-4 border-t border-white/10\">
+        <Button
+          onClick={onFetchData}
+          className=\"w-full bg-fire-high hover:bg-red-600 text-white font-bold uppercase tracking-wider\"
+          data-testid=\"fetch-data-btn\"
+        >
+          <RefreshCw size={16} className=\"mr-2\" />
+          Fetch NASA Data
+        </Button>
+        
+        <div className=\"mt-3 text-center\">
+          <p className=\"text-xs text-slate-500 font-mono\">
+            {stats?.last_updated ? (
+              <>Updated: {new Date(stats.last_updated).toLocaleTimeString()}</>
+            ) : (
+              \"Waiting for data...\"
+            )}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+"

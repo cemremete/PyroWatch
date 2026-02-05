@@ -1,0 +1,79 @@
+"// MongoDB Initialization Script
+// This script runs when the MongoDB container starts for the first time
+
+// Switch to the pyrowatch database
+db = db.getSiblingDB('pyrowatch');
+
+// Create collections with validation
+db.createCollection('fires', {
+    validator: {
+        $jsonSchema: {
+            bsonType: 'object',
+            required: ['latitude', 'longitude', 'confidence', 'detected_at'],
+            properties: {
+                id: { bsonType: 'string' },
+                latitude: { bsonType: 'double', minimum: -90, maximum: 90 },
+                longitude: { bsonType: 'double', minimum: -180, maximum: 180 },
+                location: {
+                    bsonType: 'object',
+                    required: ['type', 'coordinates'],
+                    properties: {
+                        type: { enum: ['Point'] },
+                        coordinates: { bsonType: 'array' }
+                    }
+                },
+                confidence: { bsonType: 'double', minimum: 0, maximum: 100 },
+                brightness: { bsonType: 'double' },
+                satellite: { bsonType: 'string' },
+                acq_date: { bsonType: 'string' },
+                acq_time: { bsonType: 'string' },
+                detected_at: { bsonType: 'string' },
+                frp: { bsonType: ['double', 'null'] },
+                daynight: { bsonType: 'string' }
+            }
+        }
+    }
+});
+
+db.createCollection('alerts', {
+    validator: {
+        $jsonSchema: {
+            bsonType: 'object',
+            required: ['email', 'latitude', 'longitude'],
+            properties: {
+                id: { bsonType: 'string' },
+                email: { bsonType: 'string' },
+                latitude: { bsonType: 'double' },
+                longitude: { bsonType: 'double' },
+                radius_km: { bsonType: 'double' },
+                active: { bsonType: 'bool' },
+                created_at: { bsonType: 'string' }
+            }
+        }
+    }
+});
+
+// Create indexes for optimal query performance
+print('Creating indexes...');
+
+// Geospatial index for location queries
+db.fires.createIndex({ \"location\": \"2dsphere\" });
+
+// Time-based indexes for recent fires
+db.fires.createIndex({ \"detected_at\": -1 });
+db.fires.createIndex({ \"acq_date\": 1 });
+
+// Confidence index for filtering
+db.fires.createIndex({ \"confidence\": -1 });
+
+// Compound index for common queries
+db.fires.createIndex({ \"detected_at\": -1, \"confidence\": -1 });
+
+// Alerts indexes
+db.alerts.createIndex({ \"email\": 1 });
+db.alerts.createIndex({ \"location\": \"2dsphere\" });
+
+print('Database initialization complete!');
+print('Collections created: fires, alerts');
+print('Indexes created for optimal query performance');
+"

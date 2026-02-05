@@ -1,0 +1,24 @@
+"import { useState, useEffect, useCallback } from \"react\";
+import \"@/App.css\";
+import { BrowserRouter, Routes, Route } from \"react-router-dom\";
+import { Toaster } from \"@/components/ui/sonner\";
+import Dashboard from \"@/pages/Dashboard\";
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+export const API = `${BACKEND_URL}/api`;
+
+function App() {
+  return (
+    <div className=\"pyrowatch-app\">
+      <BrowserRouter>
+        <Routes>
+          <Route path=\"/\" element={<Dashboard />} />
+        </Routes>
+      </BrowserRouter>
+      <Toaster position=\"top-right\" theme=\"dark\" />
+    </div>
+  );
+}
+
+export default App;
+"

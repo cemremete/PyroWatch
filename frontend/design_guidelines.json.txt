@@ -1,0 +1,161 @@
+{
+  "identity": {
+    "name": "PyroWatch",
+    "mission": "Real-time wildfire detection and monitoring system for emergency responders.",
+    "aesthetic": "Command Center / Tactical / Dark Mode",
+    "emotional_tone": "Urgent, Precise, Professional, High-Tech"
+  },
+  "typography": {
+    "font_family": {
+      "headings": "Barlow Condensed, sans-serif",
+      "body": "Inter, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "google_fonts_import": "https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap",
+    "usage": {
+      "h1": "text-4xl font-bold tracking-tight font-headings uppercase",
+      "h2": "text-2xl font-semibold tracking-tight font-headings uppercase",
+      "h3": "text-xl font-medium tracking-wide font-headings",
+      "body": "text-base font-normal tracking-normal font-body text-slate-300",
+      "data": "text-sm font-mono tracking-tight text-cyan-400"
+    }
+  },
+  "colors": {
+    "palette": {
+      "background": "#1a1a2e",
+      "surface": "#16213e",
+      "surface_highlight": "#1f3a5f",
+      "primary": "#ff4444",
+      "secondary": "#ff8c00",
+      "tertiary": "#ffd700",
+      "accent": "#00ffff",
+      "text_primary": "#ffffff",
+      "text_secondary": "#94a3b8",
+      "border": "rgba(0, 255, 255, 0.1)"
+    },
+    "semantic": {
+      "high_confidence": "#ff4444",
+      "medium_confidence": "#ff8c00",
+      "low_confidence": "#ffd700",
+      "safe": "#10b981",
+      "map_tiles": "CartoDB Dark Matter"
+    },
+    "tailwind_config": {
+      "extend": {
+        "colors": {
+          "navy": {
+            "900": "#1a1a2e",
+            "800": "#16213e",
+            "700": "#1f3a5f"
+          },
+          "fire": {
+            "high": "#ff4444",
+            "med": "#ff8c00",
+            "low": "#ffd700"
+          },
+          "tech": {
+            "cyan": "#00ffff"
+          }
+        }
+      }
+    }
+  },
+  "layout": {
+    "structure": "Full-screen Map Dashboard",
+    "grid_system": "Mode B: High Density Grid",
+    "spacing": "Compact (p-4, gap-4) for maximum data density",
+    "z_index": {
+      "map": 0,
+      "overlays": 10,
+      "controls": 20,
+      "modals": 50
+    },
+    "containers": {
+      "sidebar": "w-80 h-full bg-navy-900/95 backdrop-blur-md border-r border-white/10 fixed left-0 top-0 z-20 flex flex-col",
+      "floating_panel": "absolute top-4 right-4 bg-navy-900/90 backdrop-blur-md border border-white/10 rounded-lg p-4 shadow-xl z-20",
+      "map_container": "absolute inset-0 w-full h-full z-0"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-fire-high hover:bg-red-600 text-white font-bold uppercase tracking-wider rounded-sm px-4 py-2 transition-all shadow-[0_0_10px_rgba(255,68,68,0.3)]",
+      "secondary": "bg-transparent border border-tech-cyan text-tech-cyan hover:bg-tech-cyan/10 font-mono text-xs uppercase tracking-widest rounded-sm px-3 py-1"
+    },
+    "cards": {
+      "stats": "bg-navy-800/80 border border-white/5 p-4 rounded-md backdrop-blur-sm hover:border-tech-cyan/30 transition-colors",
+      "popup": "bg-navy-900 border border-fire-high/50 text-white p-0 rounded-md shadow-2xl min-w-[250px]"
+    },
+    "inputs": {
+      "search": "bg-navy-800 border-white/10 text-white placeholder:text-slate-500 focus:border-tech-cyan focus:ring-1 focus:ring-tech-cyan rounded-sm h-10"
+    },
+    "map_markers": {
+      "high": "CircleMarker: radius 8, color #ff4444, fillOpacity 0.8, pulsing animation",
+      "medium": "CircleMarker: radius 6, color #ff8c00, fillOpacity 0.7",
+      "low": "CircleMarker: radius 4, color #ffd700, fillOpacity 0.6"
+    }
+  },
+  "visual_enhancers": {
+    "glassmorphism": "backdrop-blur-md bg-navy-900/80 border border-white/10",
+    "glow_effects": "shadow-[0_0_15px_rgba(0,255,255,0.15)]",
+    "borders": "1px solid rgba(255, 255, 255, 0.08)",
+    "animations": {
+      "pulse": "animate-pulse",
+      "ping": "animate-ping"
+    }
+  },
+  "icons": {
+    "library": "lucide-react",
+    "mapping": {
+      "fire": "Flame",
+      "location": "MapPin",
+      "layers": "Layers",
+      "stats": "Activity",
+      "calendar": "Calendar",
+      "search": "Search",
+      "filter": "Filter",
+      "settings": "Settings",
+      "alert": "AlertTriangle",
+      "wind": "Wind",
+      "thermometer": "Thermometer"
+    }
+  },
+  "image_urls": {
+    "satellite_placeholder": "https://images.unsplash.com/photo-1632389026894-c673292f9b1e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjh8MHwxfHNlYXJjaHwxfHxmb3Jlc3QlMjBmaXJlJTIwYWVyaWFsJTIwdmlld3xlbnwwfHx8fDE3NzAyOTY0NDh8MA&ixlib=rb-4.1.0&q=85",
+    "map_tiles_dark": "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+  },
+  "instructions_to_main_agent": [
+    "1. Install 'leaflet' and 'react-leaflet' immediately.",
+    "2. Configure Tailwind with the custom colors (navy, fire, tech) defined in the colors section.",
+    "3. Import the Google Fonts in index.css or index.html.",
+    "4. Create a 'Layout' component that houses the Sidebar and MapContainer.",
+    "5. Use 'react-leaflet' for the map. Set the default center to a fire-prone area (e.g., California or Australia).",
+    "6. Mock the fire data with at least 50 points containing lat, lng, confidence, brightness, and timestamp.",
+    "7. Implement the 'Time Slider' using a range input styled with the accent color.",
+    "8. Ensure the 'Popup' component in the map uses the custom card styles, not the default Leaflet white bubble. Override Leaflet CSS if necessary.",
+    "9. Use the 'satellite_placeholder' image in the fire detail popup to simulate a live feed.",
+    "10. Add a 'Heatmap' toggle. If a heatmap library is not available, simulate it or use a different visual representation (e.g., larger, blurred markers) for the heatmap mode.",
+    "11. Ensure all text has sufficient contrast against the dark background (use text-slate-300 for body, white for heads).",
+    "12. Add 'data-testid' to all interactive elements (buttons, inputs, markers)."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "You tend to converge toward generic, 'on distribution' outputs. In frontend design, this creates what users call the 'AI slop' aesthetic. Avoid this: make creative, distinctive frontends that surprise and delight.",
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients",
+    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy",
+    "Use glass-morphism effects with backdrop filters (12-24px blur)",
+    "You MUST NOT apply universal transition. Eg: transition: all. This results in breaking transforms. Always add transitions for specific interactive elements like button, input excluding transforms",
+    "You MUST NOT center align the app container, ie do not add .App { text-align: center; } in the css file. This disrupts the human natural reading flow of text",
+    "Always use modern button styles like pill-shaped, or sharp button with interaction animations & color relevant to the app style",
+    "NEVER: use AI assistant Emoji characters like 🤖🧠💭💡🔮🎯📚🎭🎬🎪🎉🎊🎁🎀🎂🍰🎈🎨🎰💰💵💳🏦💎🪙💸🤑📊📈📉💹🔢🏆🥇 etc for icons.",
+    "Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations. Static = dead.",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+    "Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.",
+    "Main agent relies on these image URLs. Missing categories (especially sponsor logos) = main agent will use placeholder text which is FORBIDDEN",
+    "Prioritize using pre-existing components from src/components/ui when applicable",
+    "Create new components that match the style and conventions of existing components when needed",
+    "Examine existing components to understand the project's component patterns before creating new ones",
+    "Components MUST use named exports (export const ComponentName = ...)",
+    "Pages MUST use default exports (export default function PageName() {...})",
+    "Use 'sonner' for toasts. Sonner component are located in /app/src/components/ui/sonner.tsx"
+  ]
+}

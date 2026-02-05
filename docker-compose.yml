@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  # Backend API Service (FastAPI)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pyrowatch-backend
+    ports:
+      - "8001:8001"
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017
+      - DB_NAME=pyrowatch
+      - NASA_API_KEY=${NASA_API_KEY:-e609a7bece9ffff29998ea539d309914}
+      - CORS_ORIGINS=*
+    depends_on:
+      - mongodb
+    volumes:
+      - ./backend:/app
+    networks:
+      - pyrowatch-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend Service (React)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pyrowatch-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_BACKEND_URL=http://localhost:8001
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - pyrowatch-network
+    restart: unless-stopped
+
+  # MongoDB Database
+  mongodb:
+    image: mongo:6.0
+    container_name: pyrowatch-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - pyrowatch-network
+    restart: unless-stopped
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  # Data Fetcher Service (Scheduled)
+  data-fetcher:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pyrowatch-fetcher
+    command: ["sh", "-c", "while true; do echo 'Fetching NASA FIRMS data...'; python -c 'import asyncio; import os; import sys; sys.path.insert(0, \"/app\"); from server import fetch_and_store_task; asyncio.run(fetch_and_store_task(1))'; echo 'Sleeping for 15 minutes...'; sleep 900; done"]
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017
+      - DB_NAME=pyrowatch
+      - NASA_API_KEY=${NASA_API_KEY:-e609a7bece9ffff29998ea539d309914}
+    depends_on:
+      - mongodb
+      - backend
+    networks:
+      - pyrowatch-network
+    restart: unless-stopped
+
+networks:
+  pyrowatch-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
